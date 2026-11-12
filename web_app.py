@@ -673,27 +673,3 @@ if __name__ == "__main__":
     print("👤 Логин админа: admin")
     print("🔑 Пароль админа: admin12345")
     print(f"👉 Терминал: http://127.0.0.1:{port}")
-    @app.api_route("/gemini-proxy/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
-async def gemini_proxy(path: str, request: Request):
-    import httpx
-    from fastapi.responses import Response
-    target_url = f"https://generativelanguage.googleapis.com/{path}"
-    if request.url.query:
-        target_url += f"?{request.url.query}"
-    
-    headers = {k: v for k, v in request.headers.items() if k.lower() not in ("host", "content-length")}
-    body = await request.body()
-    
-    async with httpx.AsyncClient(timeout=60.0) as client:
-        resp = await client.request(
-            method=request.method,
-            url=target_url,
-            headers=headers,
-            content=body,
-        )
-    
-    excluded = {"content-encoding", "content-length", "transfer-encoding", "connection"}
-    resp_headers = {k: v for k, v in resp.headers.items() if k.lower() not in excluded}
-    return Response(content=resp.content, status_code=resp.status_code, headers=resp_headers)
-    print("="*50 + "\n")
-    uvicorn.run("web_app:app", host="0.0.0.0", port=port, reload=True)
